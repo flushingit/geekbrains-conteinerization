@@ -10,3 +10,11 @@
 на localhost:port должно быть доступно приложение в контейнере (оно отвечает Hello, World!).
 
 Сохраните получившийся Dockerfile в любом публичном Git репозитории, например GitHub, и пришлите ссылку на репозиторий.
+
+## Образ Python
+
+![Python](./images/python.png)
+
+## Образ Golang
+
+![Python](./images/golang.png)
