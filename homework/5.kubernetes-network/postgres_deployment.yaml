@@ -1,0 +1,71 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgresvol
+  namespace: gb5
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: csi-ceph-hdd-ms1
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  namespace: gb5
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - image: postgres:10.13
+        name: postgres
+        envFrom:
+          - configMapRef:
+             name: postgres-vars
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: postgre_pass
+        ports:
+        - containerPort: 5432
+          protocol: 'TCP'
+        volumeMounts:
+          - name: postgres-persistent-storage
+            mountPath: /var/lib/postgresql/data
+        readinessProbe:
+          failureThreshold: 3
+          exec:
+            command: ["pg_isready"]
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 60
+        livenessProbe:
+          failureThreshold: 3
+          exec:
+            command: ["pg_isready"]
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 60
+          initialDelaySeconds: 10
+      volumes:
+        - name: postgres-persistent-storage
+          persistentVolumeClaim:
+            claimName: postgresvol
