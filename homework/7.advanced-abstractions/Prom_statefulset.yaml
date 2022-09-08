@@ -1,0 +1,66 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: prometheus
+spec:
+  serviceName: prometheus
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      serviceAccount: prometheus
+      initContainers:
+        - image: busybox
+          name: mount-permissions-fix
+          command: [ "sh", "-c", "chmod 777 /prometheus" ]
+          volumeMounts:
+            - name: prometheus-persistent-storage
+              mountPath: /prometheus
+      containers:
+        - name: prometheus-k8s
+          image: prom/prometheus:v2.19.2
+          ports:
+          - protocol: TCP
+            containerPort: 9090
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9090
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9090
+            initialDelaySeconds: 20
+            periodSeconds: 60
+            timeoutSeconds: 10
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: prom-config
+              mountPath: /etc/prometheus
+            - name: prometheus-persistent-storage
+              mountPath: /prometheus
+      volumes:
+        - name: prom-config
+          configMap:
+            name: prom-configmap
+        - name: prometheus-persistent-storage
+          persistentVolumeClaim:
+            claimName: prometheusvol-prometheus-0
+  volumeClaimTemplates:
+    - metadata:
+        name: prometheusvol
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: csi-ceph-hdd-ms1

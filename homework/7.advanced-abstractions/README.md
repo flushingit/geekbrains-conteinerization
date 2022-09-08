@@ -1,3 +1,29 @@
+### node exporter
+
+Для запуска node exporter я удалил правила безопасности, ибо что этот вк клоуд о себе возомнил))
+
+![del](./images/del_cons.png)
+
+### Prometheus
+
+#### Создаём ingress
+
+![ingress](./images/ingress.png)
+
+#### и проверяем
+
+![prom](./images/prom.png)
+
+#### targets
+
+![targets](./images/targets.png)
+
+#### нагрузка
+
+![load](./images/nodes.png)
+
+
+
 # Домашнее задание для к уроку 7 - Продвинутые абстракции Kubernetes
 
 > ! Задание нужно выполнять в нэймспэйсе default
